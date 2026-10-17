@@ -39,14 +39,13 @@ jobs:
           export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
           
           # cmdline-tools/latest/bin altındaki sdkmanager'ı tools/bin'e kopyala
-          # (Buildozer hala eski yolu aradığı için)
           mkdir -p $ANDROID_SDK_ROOT/tools/bin
           if [ -f $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager ]; then
             cp $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager $ANDROID_SDK_ROOT/tools/bin/
             cp -r $ANDROID_SDK_ROOT/cmdline-tools/latest/lib $ANDROID_SDK_ROOT/tools/ 2>/dev/null || true
           fi
           
-          # Lisansları güvenli bir şekilde kabul et (yes | yerine printf kullan)
+          # Lisansları güvenli bir şekilde kabul et
           printf 'y\ny\ny\ny\ny\ny\ny\ny\n' | $ANDROID_SDK_ROOT/tools/bin/sdkmanager --licenses || true
           
           # Gerekli build-tools paketini kur
@@ -60,8 +59,7 @@ jobs:
             .buildozer
           key: buildozer-${{ hashFiles('buildozer.spec') }}
 
-      # Buildozer'ı çalıştırırken 'yes |' KULLANMA, doğrudan çalıştır
-      # (Lisanslar zaten yukarıda kabul edildi)
+      # Buildozer'ı çalıştırırken 'yes |' KULLANMA
       - name: Build APK
         run: |
           buildozer -v android debug

@@ -3,11 +3,12 @@ name: Build Android APK
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch: # Manuel tetikleme butonu ekler
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # <-- Ubuntu sürümü sabitlendi
+    # Ubuntu 22.04 kullanarak libtinfo5 hatasını önler
+    runs-on: ubuntu-22.04 
 
     steps:
       - name: Checkout code
@@ -25,13 +26,24 @@ jobs:
             git zip unzip openjdk-17-jdk \
             python3-pip autoconf libtool pkg-config \
             zlib1g-dev libncurses5-dev libncursesw5-dev \
-            libtinfo5 cmake libffi-dev libssl-dev \
-            libltdl-dev
+            cmake libffi-dev libssl-dev libltdl-dev
 
       - name: Install Buildozer
         run: |
           pip install --upgrade pip
           pip install buildozer cython==0.29.36
+
+      - name: Accept Android Licenses and Install Build-Tools
+        run: |
+          # Buildozer SDK dizinini ayarla
+          export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $ANDROID_SDK_ROOT/licenses
+          
+          # Tüm lisansları kabul et
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          
+          # Gerekli build-tools paketini manuel kur
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.0" || true
 
       - name: Cache Buildozer
         uses: actions/cache@v4
@@ -43,11 +55,12 @@ jobs:
 
       - name: Build APK
         run: |
-          buildozer android debug
+          # Derleme sırasında çıkabilecek sorulara otomatik 'yes' yanıtı ver
+          yes | buildozer -v android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: kivy-browser-apk
+          name: pybrowser-mobile-apk
           path: bin/*.apk
           retention-days: 30
